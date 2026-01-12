@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meet the Sounds</title>
+    <style>
+        :root { 
+            --bg-paper: #fdfbf7; 
+            --color-person: #0cc0df; 
+            --color-place: #ffde59; 
+            --color-action: #ff6b6b; 
+            --text-main: #555555;
+        }
+        body { background-color: var(--bg-paper); font-family: "PingFang SC", "Microsoft YaHei", sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        /* 顶部大标题 */
+        h1 { text-align: center; margin: 35px 0 5px; font-size: 1.4rem; opacity: 0.8; color: #444; letter-spacing: 0.5px; }
+        .subtitle { text-align: center; font-size: 0.95rem; color: #888; margin-bottom: 25px; font-family: Georgia, serif; font-style: italic; }
+        
+        /* 内容区 */
+        .content-area { padding: 10px 15px 40px; max-width: 600px; margin: 0 auto; }
+
+        /* 分类小标题 */
+        .cat-title { 
+            margin: 20px 0 10px; 
+            padding: 6px 12px; 
+            font-size: 0.95rem; 
+            font-weight: 800; 
+            border-radius: 6px;
+            display: inline-block;
+            color: white;
+        }
+        .cat-title.person { background-color: var(--color-person); }
+        .cat-title.place { background-color: var(--color-place); color: #7a6300; } 
+        .cat-title.action { background-color: var(--color-action); }
+        
+        /* 网格布局 */
+        .grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        
+        /* 卡片样式 */
+        .word-card { 
+            aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            background: white; border: 2px solid transparent; cursor: pointer; position: relative; 
+            box-shadow: 1px 2px 5px rgba(0,0,0,0.05); border-radius: 12px; user-select: none; padding: 2px; text-align: center;
+        }
+        .word-card:active { transform: scale(0.92); }
+        .word-card.playing { animation: pulse 1s infinite; border-width: 3px; }
+        
+        /* 字体排版 */
+        .cn-text { font-weight: 800; line-height: 1.1; margin-bottom: 4px; color: var(--text-main); }
+        .en-text { font-weight: normal; line-height: 1.0; opacity: 0.8; word-wrap: break-word; overflow: hidden; color: #777; }
+
+        /* 字号适配 */
+        .size-big .cn-text { font-size: 1.35rem; } .size-big .en-text { font-size: 0.65rem; transform: scale(0.9); } 
+        .size-small .cn-text { font-size: 1.05rem; } .size-small .en-text { font-size: 0.6rem; transform: scale(0.85); }
+
+        /* 卡片特定边框色 */
+        .person-card { border-color: var(--color-person); background: #f4fcff; }
+        .place-card { border-color: var(--color-place); background: #fffdf5; }
+        .action-card { border-color: var(--color-action); background: #fff5f5; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* 底部产品链接 (文案已更新) */
+        .footer-promo {
+            text-align: center;
+            margin-top: 30px;
+            padding-bottom: 50px;
+            font-size: 0.85rem; 
+            line-height: 1.6;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        .footer-promo a {
+            color: #b0b0b0;    
+            text-decoration: none;
+            border-bottom: 1px dashed #ddd; 
+            transition: color 0.2s;
+        }
+        .footer-promo a:hover { color: #888; border-bottom-style: solid; }
+        .footer-promo a:active { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Meet the Sounds</h1>
+    <div class="subtitle">(6-Card Starter)</div>
+    
+    <div class="content-area">
+        <div id="trial-container"></div>
+    </div>
+
+    <div class="footer-promo">
+        <a href="https://marvelous617.gumroad.com/" target="_blank">
+            If this felt easy, the Full Pack simply gives you more of the same. →
+        </a>
+    </div>
+
+    <script>
+        // --- 6个试听词汇 ---
+        const DATA = [
+            {
+                type: "person", label: "人物 (Person)", style: "person-card",
+                words: [
+                    {cn:"爸爸", en:"Dad"}, {cn:"怪兽", en:"Monster"}
+                ]
+            },
+            {
+                type: "place", label: "地点 (Place)", style: "place-card",
+                words: [
+                    {cn:"卫生间", en:"Bathroom"}, {cn:"教室", en:"Classroom"}
+                ]
+            },
+            {
+                type: "action", label: "动作 (Action)", style: "action-card",
+                words: [
+                    {cn:"睡觉", en:"Sleep"}, {cn:"跳舞", en:"Dance"}
+                ]
+            }
+        ];
+
+        function renderTrial() {
+            const container = document.getElementById('trial-container');
+            let html = '';
+
+            DATA.forEach(group => {
+                html += `<div class="cat-title ${group.type}">${group.label}</div>`;
+                html += `<div class="grid-container">`;
+                
+                group.words.forEach(item => { 
+                    const sizeClass = item.cn.length >= 4 ? 'size-small' : 'size-big';
+                    
+                    html += `
+                    <div class="word-card ${group.style} ${sizeClass}" onclick="playAudio('${item.cn}', this)">
+                        <div class="cn-text">${item.cn}</div>
+                        <div class="en-text">${item.en}</div>
+                    </div>`; 
+                });
+                html += `</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        let currentAudio = null, currentBtn = null;
+        function playAudio(word, btn) {
+            if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; if(currentBtn) currentBtn.classList.remove('playing'); }
+            btn.classList.add('playing'); currentBtn = btn;
+            
+            const audio = new Audio(`audio/${word}.mp3`);
+            currentAudio = audio;
+            audio.play().catch(e => { console.log("Missing: " + word); btn.classList.remove('playing'); });
+            audio.onended = () => { btn.classList.remove('playing'); currentAudio = null; };
+        }
+        
+        renderTrial();
+    </script>
+</body>
+</html>
